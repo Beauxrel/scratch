@@ -86,8 +86,10 @@ main(int argc, char* argv[])
     std::string dataRate = "100Mbps";      /* Application layer datarate. */
     std::string tcpVariant = "TcpNewReno"; /* TCP variant type. */
     std::string phyRate = "HtMcs7";        /* Physical layer bitrate -- Determines maximum possible physical layer rate */
-    double simulationTime = 10;            /* Simulation time in seconds. */
-    bool pcapTracing = false;              /* PCAP Tracing is enabled or not. */
+    //double simulationTime = 4;            /* Simulation time in seconds. */
+    double simulationTime = 4;            /* Simulation time in seconds. */
+    //bool pcapTracing = false;              /* PCAP Tracing is enabled or not. */
+    bool pcapTracing = true;              /* PCAP Tracing is enabled or not. */
     bool enableLargeAmpdu = false;               /* Enable/disable A-MPDU */
     bool enableRts = false;               /* Enable/disable CTS/RTS */
     std::string frequencyBand = "5GHz";     /* Set to '5GHz or '2_4GHz' ;  Frequency band to use */
@@ -200,6 +202,9 @@ main(int argc, char* argv[])
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
     positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position
     positionAlloc->Add(Vector(10.0, 0.0, 0.0));     // STA position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    //positionAlloc->Add(Vector(165.0, 0.0, 0.0));      // Q2-2
+    //positionAlloc->Add(Vector(5.0, 0.0, 0.0));        // Q2-2
+
 
     mobility.SetPositionAllocator(positionAlloc);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
