@@ -34,7 +34,7 @@ main(int argc, char* argv[])
 
     PointToPointHelper pointToPoint;
     pointToPoint.SetDeviceAttribute("DataRate", StringValue("1Mbps"));
-    pointToPoint.SetChannelAttribute("Delay", StringValue("2ms"));
+    pointToPoint.SetChannelAttribute("Delay", StringValue("10ms"));
 
     NetDeviceContainer devices;
     devices = pointToPoint.Install(nodes);
@@ -43,19 +43,19 @@ main(int argc, char* argv[])
     stack.Install(nodes);
 
     Ipv4AddressHelper address;
-    address.SetBase("10.1.1.0", "255.255.255.0");
+    address.SetBase("192.168.1.0", "255.255.255.0");
 
     Ipv4InterfaceContainer interfaces = address.Assign(devices);
 
-    UdpEchoServerHelper echoServer(9);
+    UdpEchoServerHelper echoServer(6610);
 
     ApplicationContainer serverApps = echoServer.Install(nodes.Get(1));
     serverApps.Start(Seconds(1));
     serverApps.Stop(Seconds(10));
 
-    UdpEchoClientHelper echoClient(interfaces.GetAddress(1), 9);
-    echoClient.SetAttribute("MaxPackets", UintegerValue(1));
-    echoClient.SetAttribute("Interval", TimeValue(Seconds(1)));
+    UdpEchoClientHelper echoClient(interfaces.GetAddress(1), 6610);
+    echoClient.SetAttribute("MaxPackets", UintegerValue(1000));
+    echoClient.SetAttribute("Interval", TimeValue(Seconds(2)));
     echoClient.SetAttribute("PacketSize", UintegerValue(1024));
 
     ApplicationContainer clientApps = echoClient.Install(nodes.Get(0));
