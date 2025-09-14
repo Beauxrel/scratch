@@ -36,9 +36,9 @@
  * Instructor: Prof. Karthikeyan Sundaresan
  * Programming Assignment 1
  * Q2 - TCP connection over WiFi
- * Team Members: <<Your Names Here>>
- * Team Number: <<Your Team Number Here>>
- * Date: <<Date Here>>
+ * Team Members: Amadou Djoulde Diallo, Landon Jackson, Fernando Martinez, Eric Marshall Schultz
+ * Team Number: 9
+ * Date: September 14, 2025
  */
 
 #include "ns3/command-line.h"
