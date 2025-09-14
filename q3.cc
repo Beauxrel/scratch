@@ -62,8 +62,10 @@ NS_LOG_COMPONENT_DEFINE("wifi-tcp");
 
 using namespace ns3;
 
-Ptr<PacketSink> sink;     //!< Pointer to the packet sink application
-uint64_t lastTotalRx = 0; //!< The value of the last total received bytes
+Ptr<PacketSink> sink_0;     //!< Pointer to the packet sink application
+Ptr<PacketSink> sink_1;     //!< Pointer to the packet sink application
+uint64_t lastTotalRx_0 = 0; //!< The value of the last total received bytes
+uint64_t lastTotalRx_1 = 0; //!< The value of the last total received bytes
 
 /**
  * Calculate the throughput
@@ -72,10 +74,14 @@ void
 CalculateThroughput()
 {
     Time now = Simulator::Now(); /* Return the simulator's virtual time. */
-    double cur = (sink->GetTotalRx() - lastTotalRx) * 8.0 /
+    double cur_0 = (sink_0->GetTotalRx() - lastTotalRx_0) * 8.0 /
                  1e5; /* Convert Application RX Packets to MBits. */
-    std::cout << now.GetSeconds() << "s: \t" << cur << " Mbit/s" << std::endl;
-    lastTotalRx = sink->GetTotalRx();
+    double cur_1 = (sink_1->GetTotalRx() - lastTotalRx_1) * 8.0 /
+                 1e5; /* Convert Application RX Packets to MBits. */
+    std::cout << now.GetSeconds() << "s: \t" << cur_0 << " Mbit/s (STA0)" << std::endl;
+    std::cout << now.GetSeconds() << "s: \t" << cur_1 << " Mbit/s (STA1)" << std::endl;
+    lastTotalRx_0 = sink_0->GetTotalRx();
+    lastTotalRx_1 = sink_1->GetTotalRx();
     Simulator::Schedule(MilliSeconds(100), &CalculateThroughput);
 }
 
@@ -172,9 +178,10 @@ main(int argc, char* argv[])
                                        StringValue("HtMcs0"));
 
     NodeContainer networkNodes;
-    networkNodes.Create(2);
+    networkNodes.Create(3);
     Ptr<Node> apWifiNode = networkNodes.Get(0);
-    Ptr<Node> staWifiNode = networkNodes.Get(1);
+    Ptr<Node> staWifiNode_0 = networkNodes.Get(1);
+    Ptr<Node> staWifiNode_1 = networkNodes.Get(2);
 
     /* Configure AP */
     Ssid ssid = Ssid("network");
@@ -185,9 +192,11 @@ main(int argc, char* argv[])
 
     /* Configure STA */
     wifiMac.SetType("ns3::StaWifiMac", "Ssid", SsidValue(ssid));
+    wifiMac.SetType("ns3::StaWifiMac", "Ssid", SsidValue(ssid)); //Second STA
 
-    NetDeviceContainer staDevices;
-    staDevices = wifiHelper.Install(wifiPhy, wifiMac, staWifiNode);
+    NetDeviceContainer sta_0, sta_1;
+    sta_0 = wifiHelper.Install(wifiPhy, wifiMac, staWifiNode_0);
+    sta_1 = wifiHelper.Install(wifiPhy, wifiMac, staWifiNode_1);
 
     if (!enableLargeAmpdu)
     {
@@ -198,13 +207,16 @@ main(int argc, char* argv[])
     /* Mobility model */
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
-    positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position
-    positionAlloc->Add(Vector(10.0, 0.0, 0.0));     // STA position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(0.0, 0.0, 0.0));       // AP position
+    positionAlloc->Add(Vector(-10.0, 0.0, 0.0));     // STA_0 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(10.0, 0.0, 0.0));     // STA_1 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+
 
     mobility.SetPositionAllocator(positionAlloc);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     mobility.Install(apWifiNode);                   // Position is assigned here - order of positionAlloc is important
-    mobility.Install(staWifiNode);
+    mobility.Install(staWifiNode_0);
+    mobility.Install(staWifiNode_1);
 
     /* Internet stack */
     InternetStackHelper stack;
@@ -214,8 +226,9 @@ main(int argc, char* argv[])
     address.SetBase("10.0.0.0", "255.255.255.0");
     Ipv4InterfaceContainer apInterface;
     apInterface = address.Assign(apDevice);
-    Ipv4InterfaceContainer staInterface;
-    staInterface = address.Assign(staDevices);
+    Ipv4InterfaceContainer staInterface_0, staInterface_1;
+    staInterface_0 = address.Assign(sta_0);
+    staInterface_1 = address.Assign(sta_1);
 
     /* Populate routing table */
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
@@ -224,7 +237,8 @@ main(int argc, char* argv[])
     PacketSinkHelper sinkHelper("ns3::TcpSocketFactory",
                                 InetSocketAddress(Ipv4Address::GetAny(), 9));
     ApplicationContainer sinkApp = sinkHelper.Install(apWifiNode);
-    sink = StaticCast<PacketSink>(sinkApp.Get(0));
+    sink_0 = StaticCast<PacketSink>(sinkApp.Get(0));
+    sink_1 = StaticCast<PacketSink>(sinkApp.Get(0));
 
     /* Install TCP/UDP Transmitter on the station */
     OnOffHelper server("ns3::TcpSocketFactory", (InetSocketAddress(apInterface.GetAddress(0), 9)));
@@ -232,11 +246,13 @@ main(int argc, char* argv[])
     server.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
     server.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
     server.SetAttribute("DataRate", DataRateValue(DataRate(dataRate)));
-    ApplicationContainer serverApp = server.Install(staWifiNode);
+    ApplicationContainer serverApp_0 = server.Install(staWifiNode_0);
+    ApplicationContainer serverApp_1 = server.Install(staWifiNode_1);
 
     /* Start Applications */
     sinkApp.Start(Seconds(0.0));
-    serverApp.Start(Seconds(1.0));
+    serverApp_0.Start(Seconds(1.0));
+    serverApp_1.Start(Seconds(1.0));
     Simulator::Schedule(Seconds(1.1), &CalculateThroughput);
 
     /* Enable Traces */
@@ -244,17 +260,26 @@ main(int argc, char* argv[])
     {
         wifiPhy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
         wifiPhy.EnablePcap("module2-AccessPoint", apDevice);
-        wifiPhy.EnablePcap("module2-Station", staDevices);
+        wifiPhy.EnablePcap("module2-Station_0", sta_0);
+        wifiPhy.EnablePcap("module2-Station_1", sta_1);
     }
+
+    std::cout << "AP: "   << apInterface.GetAddress(0)   << "\n"
+        << "STA0: " << staInterface_0.GetAddress(0) << "\n"
+        << "STA1: " << staInterface_1.GetAddress(0) << "\n"
+    ;
 
     /* Start Simulation */
     Simulator::Stop(Seconds(simulationTime + 1));
     Simulator::Run();
 
-    double averageThroughput = ((sink->GetTotalRx() * 8) / (1e6 * simulationTime));
+
+    double averageThroughput_0 = ((sink_0->GetTotalRx() * 8) / (1e6 * simulationTime));
+    double averageThroughput_1 = ((sink_1->GetTotalRx() * 8) / (1e6 * simulationTime));
 
     Simulator::Destroy();
 
-    std::cout << "\nAverage throughput: " << averageThroughput << " Mbit/s" << std::endl;
+    std::cout << "\nAverage throughput for STA 0: " << averageThroughput_0 << " Mbit/s" << std::endl;
+    std::cout << "\nAverage throughput for STA 1: " << averageThroughput_1 << " Mbit/s" << std::endl;
     return 0;
 }
