@@ -208,8 +208,8 @@ main(int argc, char* argv[])
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
     positionAlloc->Add(Vector(0.0, 0.0, 0.0));       // AP position
-    positionAlloc->Add(Vector(-10.0, 0.0, 0.0));     // STA_0 position - pay attention to distance calculation. Change just one coordinate for simple calculation
-    positionAlloc->Add(Vector(10.0, 0.0, 0.0));     // STA_1 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(-160.0, 0.0, 0.0));     // STA_0 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(160.0, 0.0, 0.0));     // STA_1 position - pay attention to distance calculation. Change just one coordinate for simple calculation
 
 
     mobility.SetPositionAllocator(positionAlloc);
