@@ -88,7 +88,7 @@ main(int argc, char* argv[])
     std::string phyRate = "HtMcs7";        /* Physical layer bitrate -- Determines maximum possible physical layer rate */
     double simulationTime = 10;            /* Simulation time in seconds. */
     bool pcapTracing = false;              /* PCAP Tracing is enabled or not. */
-    bool enableLargeAmpdu = true;               /* Enable/disable A-MPDU */
+    bool enableLargeAmpdu = false;               /* Enable/disable A-MPDU */
     bool enableRts = true;               /* Enable/disable CTS/RTS */
     std::string frequencyBand = "5GHz";     /* Set to '5GHz or '2_4GHz' ;  Frequency band to use */
 

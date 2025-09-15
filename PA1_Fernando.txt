@@ -1,0 +1,16 @@
+Q1-1 The client sent 4 pacekts to the server
+Q1-2 36.864ms is the RTT, The time is nearly quadruple my P2P delay. The delay was at 10, my RTT is nearly 4 times that
+Q1-3 What I sent is 1054, the data sent is 1024, UDP adds 8 Bytes,IP adds 20 Bytes, and PPP adds 2 Bytes
+Q1-4 There will always be a delay due to the datarate that will prevent any collisions as everything is queued
+
+Q2-1 The configured application data rate is 100Mbps. The total average throughput is 42.0768. Using that table, it says we cap out at 65 and not our 100 that was set up in the code.
+Q2-2 At a distance of 165 is when the throughput drops to zero
+Q2-3 The configured beacon interval BI is 100
+Q2-4 It is an association frame, that is triggered by recieving the beacon frame
+
+Q3-1 The average throughput is 32.3357 Mbit/s when false, 25.8024 if true. I believe it is caused by collisions and overhead
+Q3-2 with the range 165, anything above 82.5m will create hidden terminals so anything between 83-165m will work
+Q3-3 The average throughput with RTS true is 25.7635, 32.2733 if false, I believe this is due to RTS hadding overhead to avoid collisions,which seems wrong, but with a higher x0 this changes.
+Q3-4 So a station transmits an RTS to the Acess Point, then the AP sends out a message to everyone hearing not to transmit other than the first one. Then the station sends data to the AP, then the AP sends bac a message when everything is done.
+Q3-5 RTS False gives 52.5904 Mbit/s, else 54.1696, With largeampdu on, it gave a huge boost to throughput. Although in this case, having RTS on gave a higher throughput. I can see when bigger packets are involved these collisions are more prominent. You would use RTS when in a situation lie this else it is marginable.
+
