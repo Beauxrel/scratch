@@ -1,0 +1,27 @@
+
+Q1-1 How many packets did the client send in total?  
+
+* The client sent 4 packets in total. The first packet was sent at 2 seconds, and the last packet was sent at 8 seconds. 
+  Each packet is sent at an interval of 2 seconds, and no packet was sent at t = 10 seconds because the client application was stopped at that time.
+
+
+Q1-2 Open the PCAP files using Wireshark. From the timestamps of packets at the client, what is
+the round trip time (RTT) as seen by the client? What is the relationship between the RTT and the
+P2P link delay?
+
+* The RTT is 36ms. The RTT is equal to twice the P2P link delay (10ms * 2 = 20ms) plus the processing time at the server and client.
+  This matches the console output, which shows the RTT for each packet as 36ms.
+
+
+Q1-3 What is the data (content) in the payload of each packet? This can be found in the Data field in
+Wireshark for any UDP packet. How many bytes did each layer (UDP, IP, PPP) add to the payload?
+
+* The wireshark capture shows a total length of 1054 bytes for each UDP packet. 
+  This is made up of 1024 bytes of the application data, 8 bytes of UDP header, 20 bytes of IP header, and 2 bytes of PPP header.
+
+Q1-4 Can you adjust the channel delay in a manner that will lead to a packet collision (between the
+packet sent by the client and the echo packet from server)? If yes, give an example of such a channel
+delay. If not, then why not?
+
+* You cannot create package collison by adjusting channel delay. This is because PPP is full duplex, which means it provides
+  seperate channels for each direction. There are also only two nodes on the link. 

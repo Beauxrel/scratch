@@ -86,7 +86,7 @@ main(int argc, char* argv[])
     std::string dataRate = "100Mbps";      /* Application layer datarate. */
     std::string tcpVariant = "TcpNewReno"; /* TCP variant type. */
     std::string phyRate = "HtMcs7";        /* Physical layer bitrate -- Determines maximum possible physical layer rate */
-    double simulationTime = 10;            /* Simulation time in seconds. */
+    double simulationTime = 4;            /* Simulation time in seconds. */ //Changed from 10 to 4s
     bool pcapTracing = false;              /* PCAP Tracing is enabled or not. */
     bool enableLargeAmpdu = false;               /* Enable/disable A-MPDU */
     bool enableRts = false;               /* Enable/disable CTS/RTS */
