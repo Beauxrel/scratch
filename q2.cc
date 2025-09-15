@@ -89,8 +89,6 @@ main(int argc, char* argv[])
 
     double simulationTime = 4;            /* Simulation time in seconds. */ //Changed from 10 to 4s
 
-    //double simulationTime = 4;            /* Simulation time in seconds. */
-    double simulationTime = 4;            /* Simulation time in seconds. */
     //bool pcapTracing = false;              /* PCAP Tracing is enabled or not. */
     bool pcapTracing = true;              /* PCAP Tracing is enabled or not. */
     bool enableLargeAmpdu = false;               /* Enable/disable A-MPDU */
