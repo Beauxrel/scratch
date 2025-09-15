@@ -62,8 +62,11 @@ NS_LOG_COMPONENT_DEFINE("wifi-tcp");
 
 using namespace ns3;
 
-Ptr<PacketSink> sink;     //!< Pointer to the packet sink application
-uint64_t lastTotalRx = 0; //!< The value of the last total received bytes
+Ptr<PacketSink> sink1;     //!< Pointer to the packet sink application for STA1
+Ptr<PacketSink> sink2;     //!< Pointer to the packet sink application for STA2
+uint64_t lastTotalRx1 = 0; //!< The value of the last total received bytes for STA1
+uint64_t lastTotalRx2 = 0; //!< The value of the last total received bytes for STA2
+
 
 /**
  * Calculate the throughput
@@ -72,10 +75,21 @@ void
 CalculateThroughput()
 {
     Time now = Simulator::Now(); /* Return the simulator's virtual time. */
-    double cur = (sink->GetTotalRx() - lastTotalRx) * 8.0 /
-                 1e5; /* Convert Application RX Packets to MBits. */
-    std::cout << now.GetSeconds() << "s: \t" << cur << " Mbit/s" << std::endl;
-    lastTotalRx = sink->GetTotalRx();
+
+    // Calculate the throughput for STA1 and STA2
+    double cur1 = (sink1->GetTotalRx() - lastTotalRx1) * 8.0 / 1e5; /* Convert Application RX Packets to MBits. */
+    std::cout << now.GetSeconds() << "s: \t" << cur1 << " Mbit/s" << std::endl;
+    lastTotalRx1 = sink1->GetTotalRx();
+
+    double cur2 = (sink2->GetTotalRx() - lastTotalRx2) * 8.0 / 1e5; /* Convert Application RX Packets to MBits. */
+    std::cout << now.GetSeconds() << "s: \t" << cur2 << " Mbit/s" << std::endl;
+    lastTotalRx2 = sink2->GetTotalRx();
+
+    // Calculate the total throughput
+    double totalThroughput = cur1 + cur2;
+
+    std::cout << now.GetSeconds() << "s: \tSTA1: " << cur1 << " Mbit/s\tSTA2: " << cur2 << " Mbit/s\tTotal: " << totalThroughput << " Mbit/s" << std::endl;
+
     Simulator::Schedule(MilliSeconds(100), &CalculateThroughput);
 }
 
@@ -86,8 +100,8 @@ main(int argc, char* argv[])
     std::string dataRate = "100Mbps";      /* Application layer datarate. */
     std::string tcpVariant = "TcpNewReno"; /* TCP variant type. */
     std::string phyRate = "HtMcs7";        /* Physical layer bitrate -- Determines maximum possible physical layer rate */
-    double simulationTime = 4;            /* Simulation time in seconds. */ //Changed from 10 to 4s
-    bool pcapTracing = true;              /* PCAP Tracing is enabled or not. */
+    double simulationTime = 10;            /* Simulation time in seconds. */
+    bool pcapTracing = false;              /* PCAP Tracing is enabled or not. */
     bool enableLargeAmpdu = false;               /* Enable/disable A-MPDU */
     bool enableRts = false;               /* Enable/disable CTS/RTS */
     std::string frequencyBand = "5GHz";     /* Set to '5GHz or '2_4GHz' ;  Frequency band to use */
@@ -95,7 +109,7 @@ main(int argc, char* argv[])
     /* Command line argument parser setup. */
     CommandLine cmd(__FILE__);
     cmd.AddValue("payloadSize", "Payload size in bytes", payloadSize);
-    cmd.AddValue("dataRate", "Application data ate", dataRate);
+    cmd.AddValue("dataRate", "Application data rate", dataRate);
     cmd.AddValue("tcpVariant",
                  "Transport protocol to use: TcpNewReno, "
                  "TcpHybla, TcpHighSpeed, TcpHtcp, TcpVegas, TcpScalable, TcpVeno, "
@@ -104,6 +118,8 @@ main(int argc, char* argv[])
     cmd.AddValue("phyRate", "Physical layer bitrate", phyRate);
     cmd.AddValue("simulationTime", "Simulation time in seconds", simulationTime);
     cmd.AddValue("pcap", "Enable/disable PCAP Tracing", pcapTracing);
+    cmd.AddValue("enableLargeAmpdu", "Enable/disable A-MPDU", enableLargeAmpdu);
+    cmd.AddValue("enableRts", "Enable/disable RTS/CTS", enableRts);
     cmd.Parse(argc, argv);
 
     tcpVariant = std::string("ns3::") + tcpVariant;
@@ -170,11 +186,12 @@ main(int argc, char* argv[])
                                        StringValue(phyRate),
                                        "ControlMode",
                                        StringValue("HtMcs0"));
-
+    /* Create 3 nodes. 1 AP and 2 STAs */
     NodeContainer networkNodes;
-    networkNodes.Create(2);
+    networkNodes.Create(3);
     Ptr<Node> apWifiNode = networkNodes.Get(0);
-    Ptr<Node> staWifiNode = networkNodes.Get(1);
+    Ptr<Node> sta1WifiNode = networkNodes.Get(1);
+    Ptr<Node> sta2WifiNode = networkNodes.Get(2);
 
     /* Configure AP */
     Ssid ssid = Ssid("network");
@@ -183,11 +200,12 @@ main(int argc, char* argv[])
     NetDeviceContainer apDevice;
     apDevice = wifiHelper.Install(wifiPhy, wifiMac, apWifiNode);
 
-    /* Configure STA */
+    /* Configure STAs */
     wifiMac.SetType("ns3::StaWifiMac", "Ssid", SsidValue(ssid));
 
     NetDeviceContainer staDevices;
-    staDevices = wifiHelper.Install(wifiPhy, wifiMac, staWifiNode);
+    staDevices = wifiHelper.Install(wifiPhy, wifiMac, sta1WifiNode);
+    staDevices.Add(wifiHelper.Install(wifiPhy, wifiMac, sta2WifiNode));
 
     if (!enableLargeAmpdu)
     {
@@ -198,13 +216,18 @@ main(int argc, char* argv[])
     /* Mobility model */
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
-    positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position 
-    positionAlloc->Add(Vector(165.0, 0.0, 0.0));     // STA position - pay attention to distance calculation. Change just one coordinate for simple calculation 
+    positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position
+    positionAlloc->Add(Vector(-165.0, 0.0, 0.0));     // STA1 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(165.0, 0.0, 0.0));     // STA2 position - pay attention to distance calculation. Change just one coordinate for simple calculation
 
     mobility.SetPositionAllocator(positionAlloc);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    mobility.Install(networkNodes);
+    /*
     mobility.Install(apWifiNode);                   // Position is assigned here - order of positionAlloc is important
     mobility.Install(staWifiNode);
+    */
+
 
     /* Internet stack */
     InternetStackHelper stack;
@@ -214,61 +237,72 @@ main(int argc, char* argv[])
     address.SetBase("10.0.0.0", "255.255.255.0");
     Ipv4InterfaceContainer apInterface;
     apInterface = address.Assign(apDevice);
-    Ipv4InterfaceContainer staInterface;
-    staInterface = address.Assign(staDevices);
+    Ipv4InterfaceContainer staInterfaces;
+    staInterfaces = address.Assign(staDevices);
 
     /* Populate routing table */
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
-    /* Install TCP Receiver on the access point */
-    PacketSinkHelper sinkHelper("ns3::TcpSocketFactory",
+    /* Install TCP Receiver on the access point -Port 9  for STA1  and Port 10 for STA2 */
+    PacketSinkHelper sinkHelper1("ns3::TcpSocketFactory",
                                 InetSocketAddress(Ipv4Address::GetAny(), 9));
-    ApplicationContainer sinkApp = sinkHelper.Install(apWifiNode);
-    sink = StaticCast<PacketSink>(sinkApp.Get(0));
+    ApplicationContainer sinkApp1 = sinkHelper1.Install(apWifiNode);
+    sink1 = StaticCast<PacketSink>(sinkApp1.Get(0));
 
-    /* Install TCP/UDP Transmitter on the station */
-    OnOffHelper server("ns3::TcpSocketFactory", (InetSocketAddress(apInterface.GetAddress(0), 9)));
-    server.SetAttribute("PacketSize", UintegerValue(payloadSize));
-    server.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
-    server.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
-    server.SetAttribute("DataRate", DataRateValue(DataRate(dataRate)));
-    ApplicationContainer serverApp = server.Install(staWifiNode);
+    PacketSinkHelper sinkHelper2("ns3::TcpSocketFactory",
+                                InetSocketAddress(Ipv4Address::GetAny(), 10));
+    ApplicationContainer sinkApp2 = sinkHelper2.Install(apWifiNode);
+    sink2 = StaticCast<PacketSink>(sinkApp2.Get(0));
+
+    /* Install TCP Transmitter on the STA1 */
+    OnOffHelper server1("ns3::TcpSocketFactory", (InetSocketAddress(apInterface.GetAddress(0), 9)));
+    server1.SetAttribute("PacketSize", UintegerValue(payloadSize));
+    server1.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
+    server1.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
+    server1.SetAttribute("DataRate", DataRateValue(DataRate(dataRate)));
+    ApplicationContainer serverApp1 = server1.Install(sta1WifiNode);
+
+    /* Install TCP Transmitter on the STA2 */
+    OnOffHelper server2("ns3::TcpSocketFactory", (InetSocketAddress(apInterface.GetAddress(0), 10)));
+    server2.SetAttribute("PacketSize", UintegerValue(payloadSize));
+    server2.SetAttribute("OnTime", StringValue("ns3::ConstantRandomVariable[Constant=1]"));
+    server2.SetAttribute("OffTime", StringValue("ns3::ConstantRandomVariable[Constant=0]"));
+    server2.SetAttribute("DataRate", DataRateValue(DataRate(dataRate)));
+    ApplicationContainer serverApp2 = server2.Install(sta2WifiNode);
 
     /* Start Applications */
-    sinkApp.Start(Seconds(0.0));
-    serverApp.Start(Seconds(1.0));
+    sinkApp1.Start(Seconds(0.0));
+    sinkApp2.Start(Seconds(0.0));
+    serverApp1.Start(Seconds(1.0));
+    serverApp2.Start(Seconds(1.0));
     Simulator::Schedule(Seconds(1.1), &CalculateThroughput);
 
     /* Enable Traces */
     if (pcapTracing)
     {
         wifiPhy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
+        wifiPhy.EnablePcap("AccessPoint", apDevice);
+        wifiPhy.EnablePcap("Station1", staDevices.Get(0));
+        wifiPhy.EnablePcap("Station2", staDevices.Get(1));
+        /*
         wifiPhy.EnablePcap("module2-AccessPoint", apDevice);
         wifiPhy.EnablePcap("module2-Station", staDevices);
+        */
     }
 
     /* Start Simulation */
     Simulator::Stop(Seconds(simulationTime + 1));
     Simulator::Run();
 
-    double averageThroughput = ((sink->GetTotalRx() * 8) / (1e6 * simulationTime));
+    double averageThroughput1 = ((sink1->GetTotalRx() * 8) / (1e6 * simulationTime));
+    double averageThroughput2 = ((sink2->GetTotalRx() * 8) / (1e6 * simulationTime));
 
     Simulator::Destroy();
 
-    std::cout << "\nAverage throughput: " << averageThroughput << " Mbit/s" << std::endl;
+    std::cout << "\nAverage throughput STA1: " << averageThroughput1 << " Mbit/s" << std::endl;
+    std::cout << "\nAverage throughput STA2: " << averageThroughput2 << " Mbit/s" << std::endl;
+    std::cout << "\nAverage total throughput: " << averageThroughput1 + averageThroughput2 << " Mbit/s" << std::endl;
+    std::cout << "enableRts: " << (enableRts ? "true" : "false") << std::endl;
     return 0;
+
 }
-
-/*
-The configure application data rate at the client is 100Mbps.
-The final total average throughput is 32.4 Mbit/s.
-There is a big difference between the application data rate and the achieved throughput. This is because of the following reasons:
-1. WiFi has a lot of overhead (MAC layer, PHY layer) which reduces the effective throughput.
-2. TCP has its own overhead (ACKs, congestion control, etc.) which reduces the effective throughput.
-3. The distance between the AP and the STA is 10 meters, which is not ideal for WiFi communication. The signal strength decreases with distance, leading to lower throughput.
-4. The physical layer rate is set to HtMcs7, which is not the highest possible rate. Higher rates can be achieved with better channel conditions and shorter distances.
-5. The simulation time is only 4 seconds, which may not be enough to reach a steady state. Longer simulations may yield different results.
-
-
-The trhoughput drops to zero 
-*/  
