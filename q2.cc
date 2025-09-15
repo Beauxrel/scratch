@@ -36,9 +36,9 @@
  * Instructor: Prof. Karthikeyan Sundaresan
  * Programming Assignment 1
  * Q2 - TCP connection over WiFi
- * Team Members: <<Your Names Here>>
- * Team Number: <<Your Team Number Here>>
- * Date: <<Date Here>>
+ * Team Members: Amadou Djoulde Diallo, Landon Jackson, Fernando Martinez, Eric Marshall Schultz
+ * Team Number: 9
+ * Date: September 14, 2025
  */
 
 #include "ns3/command-line.h"
@@ -86,7 +86,12 @@ main(int argc, char* argv[])
     std::string dataRate = "100Mbps";      /* Application layer datarate. */
     std::string tcpVariant = "TcpNewReno"; /* TCP variant type. */
     std::string phyRate = "HtMcs7";        /* Physical layer bitrate -- Determines maximum possible physical layer rate */
+
     double simulationTime = 4;            /* Simulation time in seconds. */ //Changed from 10 to 4s
+
+    //double simulationTime = 4;            /* Simulation time in seconds. */
+    double simulationTime = 4;            /* Simulation time in seconds. */
+    //bool pcapTracing = false;              /* PCAP Tracing is enabled or not. */
     bool pcapTracing = true;              /* PCAP Tracing is enabled or not. */
     bool enableLargeAmpdu = false;               /* Enable/disable A-MPDU */
     bool enableRts = false;               /* Enable/disable CTS/RTS */
@@ -198,8 +203,11 @@ main(int argc, char* argv[])
     /* Mobility model */
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
-    positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position 
-    positionAlloc->Add(Vector(165.0, 0.0, 0.0));     // STA position - pay attention to distance calculation. Change just one coordinate for simple calculation 
+
+    positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position
+    positionAlloc->Add(Vector(10.0, 0.0, 0.0));     // STA position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    //positionAlloc->Add(Vector(165.0, 0.0, 0.0));      // Q2-2
+    //positionAlloc->Add(Vector(5.0, 0.0, 0.0));        // Q2-2
 
     mobility.SetPositionAllocator(positionAlloc);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");

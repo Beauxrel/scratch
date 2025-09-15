@@ -15,6 +15,16 @@
 # //    point-to-point
 # //
 
+ /*
+ * ECE 6610 Fall 2025
+ * Instructor: Prof. Karthikeyan Sundaresan
+ * Programming Assignment 1
+ * Q1 - A wired Point-to-Point network
+ * Team Members: Amadou Djoulde Diallo, Landon Jackson, Fernando Martinez, Eric Marshall Schultz
+ * Team Number: 9
+ * Date: September 14, 2025
+ */
+
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("FirstScriptExample");
