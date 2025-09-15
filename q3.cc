@@ -65,10 +65,10 @@ NS_LOG_COMPONENT_DEFINE("wifi-tcp");
 using namespace ns3;
 
 
-Ptr<PacketSink> sink_0;     //!< Pointer to the packet sink application
-Ptr<PacketSink> sink_1;     //!< Pointer to the packet sink application
-uint64_t lastTotalRx_0 = 0; //!< The value of the last total received bytes
-uint64_t lastTotalRx_1 = 0; //!< The value of the last total received bytes
+Ptr<PacketSink> sink1;     //!< Pointer to the packet sink application
+Ptr<PacketSink> sink2;     //!< Pointer to the packet sink application
+uint64_t lastTotalRx1 = 0; //!< The value of the last total received bytes
+uint64_t lastTotalRx2 = 0; //!< The value of the last total received bytes
 
 
 /**
@@ -226,8 +226,8 @@ main(int argc, char* argv[])
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
 
     positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position
-    positionAlloc->Add(Vector(-165.0, 0.0, 0.0));     // STA1 position - pay attention to distance calculation. Change just one coordinate for simple calculation
-    positionAlloc->Add(Vector(165.0, 0.0, 0.0));     // STA2 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(-5.0, 0.0, 0.0));     // STA1 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(5.0, 0.0, 0.0));     // STA2 position - pay attention to distance calculation. Change just one coordinate for simple calculation
 
     mobility.SetPositionAllocator(positionAlloc);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
