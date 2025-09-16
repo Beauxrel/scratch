@@ -86,8 +86,9 @@ main(int argc, char* argv[])
     std::string dataRate = "100Mbps";      /* Application layer datarate. */
     std::string tcpVariant = "TcpNewReno"; /* TCP variant type. */
     std::string phyRate = "HtMcs7";        /* Physical layer bitrate -- Determines maximum possible physical layer rate */
-    //double simulationTime = 4;            /* Simulation time in seconds. */
-    double simulationTime = 4;            /* Simulation time in seconds. */
+
+    double simulationTime = 4;            /* Simulation time in seconds. */ //Changed from 10 to 4s
+
     //bool pcapTracing = false;              /* PCAP Tracing is enabled or not. */
     bool pcapTracing = true;              /* PCAP Tracing is enabled or not. */
     bool enableLargeAmpdu = false;               /* Enable/disable A-MPDU */
@@ -200,11 +201,11 @@ main(int argc, char* argv[])
     /* Mobility model */
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
+
     positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position
     positionAlloc->Add(Vector(10.0, 0.0, 0.0));     // STA position - pay attention to distance calculation. Change just one coordinate for simple calculation
     //positionAlloc->Add(Vector(165.0, 0.0, 0.0));      // Q2-2
     //positionAlloc->Add(Vector(5.0, 0.0, 0.0));        // Q2-2
-
 
     mobility.SetPositionAllocator(positionAlloc);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
@@ -263,3 +264,17 @@ main(int argc, char* argv[])
     std::cout << "\nAverage throughput: " << averageThroughput << " Mbit/s" << std::endl;
     return 0;
 }
+
+/*
+The configure application data rate at the client is 100Mbps.
+The final total average throughput is 32.4 Mbit/s.
+There is a big difference between the application data rate and the achieved throughput. This is because of the following reasons:
+1. WiFi has a lot of overhead (MAC layer, PHY layer) which reduces the effective throughput.
+2. TCP has its own overhead (ACKs, congestion control, etc.) which reduces the effective throughput.
+3. The distance between the AP and the STA is 10 meters, which is not ideal for WiFi communication. The signal strength decreases with distance, leading to lower throughput.
+4. The physical layer rate is set to HtMcs7, which is not the highest possible rate. Higher rates can be achieved with better channel conditions and shorter distances.
+5. The simulation time is only 4 seconds, which may not be enough to reach a steady state. Longer simulations may yield different results.
+
+
+The trhoughput drops to zero 
+*/  

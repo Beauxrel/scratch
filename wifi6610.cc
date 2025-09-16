@@ -20,12 +20,10 @@
  *
  * Network topology:
  *
-
- *   STA    Ap    STA
- *   *      *      *
- *   |      |      |
- *   n3     n1     n2
-
+ *   Ap    STA
+ *   *      *
+ *   |      |
+ *   n1     n2
  *
  * In this example, an HT station sends TCP packets to the access point.
  * We report the total throughput received during a window of 100ms.
@@ -37,10 +35,10 @@
  * ECE 6610 Fall 2025
  * Instructor: Prof. Karthikeyan Sundaresan
  * Programming Assignment 1
- * Q3 - Hidden terminals, MPDU aggregation, and RTS/CTS
- * Team Members: Amadou Djoulde Diallo, Landon Jackson, Fernando Martinez, Eric Marshall Schultz
- * Team Number: 9
- * Date: September 14, 2025
+ * Q2 - TCP connection over WiFi
+ * Team Members: <<Your Names Here>>
+ * Team Number: <<Your Team Number Here>>
+ * Date: <<Date Here>>
  */
 
 #include "ns3/command-line.h"
@@ -64,11 +62,10 @@ NS_LOG_COMPONENT_DEFINE("wifi-tcp");
 
 using namespace ns3;
 
-
-Ptr<PacketSink> sink1;     //!< Pointer to the packet sink application
-Ptr<PacketSink> sink2;     //!< Pointer to the packet sink application
-uint64_t lastTotalRx1 = 0; //!< The value of the last total received bytes
-uint64_t lastTotalRx2 = 0; //!< The value of the last total received bytes
+Ptr<PacketSink> sink1;     //!< Pointer to the packet sink application for STA1
+Ptr<PacketSink> sink2;     //!< Pointer to the packet sink application for STA2
+uint64_t lastTotalRx1 = 0; //!< The value of the last total received bytes for STA1
+uint64_t lastTotalRx2 = 0; //!< The value of the last total received bytes for STA2
 
 
 /**
@@ -112,9 +109,7 @@ main(int argc, char* argv[])
     /* Command line argument parser setup. */
     CommandLine cmd(__FILE__);
     cmd.AddValue("payloadSize", "Payload size in bytes", payloadSize);
-
     cmd.AddValue("dataRate", "Application data rate", dataRate);
-
     cmd.AddValue("tcpVariant",
                  "Transport protocol to use: TcpNewReno, "
                  "TcpHybla, TcpHighSpeed, TcpHtcp, TcpVegas, TcpScalable, TcpVeno, "
@@ -123,10 +118,8 @@ main(int argc, char* argv[])
     cmd.AddValue("phyRate", "Physical layer bitrate", phyRate);
     cmd.AddValue("simulationTime", "Simulation time in seconds", simulationTime);
     cmd.AddValue("pcap", "Enable/disable PCAP Tracing", pcapTracing);
-
     cmd.AddValue("enableLargeAmpdu", "Enable/disable A-MPDU", enableLargeAmpdu);
     cmd.AddValue("enableRts", "Enable/disable RTS/CTS", enableRts);
-
     cmd.Parse(argc, argv);
 
     tcpVariant = std::string("ns3::") + tcpVariant;
@@ -193,7 +186,6 @@ main(int argc, char* argv[])
                                        StringValue(phyRate),
                                        "ControlMode",
                                        StringValue("HtMcs0"));
-
     /* Create 3 nodes. 1 AP and 2 STAs */
     NodeContainer networkNodes;
     networkNodes.Create(3);
@@ -224,10 +216,9 @@ main(int argc, char* argv[])
     /* Mobility model */
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
-
     positionAlloc->Add(Vector(0.0, 0.0, 0.0));      // AP position
-    positionAlloc->Add(Vector(-5.0, 0.0, 0.0));     // STA1 position - pay attention to distance calculation. Change just one coordinate for simple calculation
-    positionAlloc->Add(Vector(5.0, 0.0, 0.0));     // STA2 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(-10.0, 0.0, 0.0));     // STA1 position - pay attention to distance calculation. Change just one coordinate for simple calculation
+    positionAlloc->Add(Vector(10.0, 0.0, 0.0));     // STA2 position - pay attention to distance calculation. Change just one coordinate for simple calculation
 
     mobility.SetPositionAllocator(positionAlloc);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
@@ -246,10 +237,8 @@ main(int argc, char* argv[])
     address.SetBase("10.0.0.0", "255.255.255.0");
     Ipv4InterfaceContainer apInterface;
     apInterface = address.Assign(apDevice);
-
     Ipv4InterfaceContainer staInterfaces;
     staInterfaces = address.Assign(staDevices);
-
 
     /* Populate routing table */
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
@@ -286,14 +275,12 @@ main(int argc, char* argv[])
     sinkApp2.Start(Seconds(0.0));
     serverApp1.Start(Seconds(1.0));
     serverApp2.Start(Seconds(1.0));
-
     Simulator::Schedule(Seconds(1.1), &CalculateThroughput);
 
     /* Enable Traces */
     if (pcapTracing)
     {
         wifiPhy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
-
         wifiPhy.EnablePcap("AccessPoint", apDevice);
         wifiPhy.EnablePcap("Station1", staDevices.Get(0));
         wifiPhy.EnablePcap("Station2", staDevices.Get(1));
@@ -302,7 +289,7 @@ main(int argc, char* argv[])
         wifiPhy.EnablePcap("module2-Station", staDevices);
         */
     }
-  
+
     /* Start Simulation */
     Simulator::Stop(Seconds(simulationTime + 1));
     Simulator::Run();
@@ -317,4 +304,5 @@ main(int argc, char* argv[])
     std::cout << "\nAverage total throughput: " << averageThroughput1 + averageThroughput2 << " Mbit/s" << std::endl;
     std::cout << "enableRts: " << (enableRts ? "true" : "false") << std::endl;
     return 0;
+
 }

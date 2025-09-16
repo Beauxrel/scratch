@@ -40,7 +40,7 @@ main(int argc, char* argv[])
     LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
     NodeContainer nodes;
-    nodes.Create(2);
+    nodes.Create(2); // create 2 nodes
 
     PointToPointHelper pointToPoint;
     pointToPoint.SetDeviceAttribute("DataRate", StringValue("1Mbps"));
@@ -53,7 +53,7 @@ main(int argc, char* argv[])
     stack.Install(nodes);
 
     Ipv4AddressHelper address;
-    address.SetBase("192.168.1.0", "255.255.255.0");
+    address.SetBase("192.168.1.0", "255.255.255.0"); // Set the base network address and mask
 
     Ipv4InterfaceContainer interfaces = address.Assign(devices);
 
@@ -77,3 +77,5 @@ main(int argc, char* argv[])
     Simulator::Destroy();
     return 0;
 }
+
+
